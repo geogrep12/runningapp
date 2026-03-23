@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a1628">
+<title>Runner Pro</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800;900&family=DM+Mono:wght@400;500&family=Noto+Sans+Georgian:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="toast"></div>
+<div id="splash">
+  <div class="splash-logo">
+    <svg width="90" height="90" viewBox="0 0 90 90">
+      <defs><linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#00c8ff"/></linearGradient></defs>
+      <circle cx="45" cy="45" r="40" fill="none" stroke="url(#sg1)" stroke-width="3" stroke-dasharray="200 50" stroke-linecap="round"/>
+      <circle cx="45" cy="45" r="30" fill="rgba(249,115,22,0.08)"/>
+      <text x="45" y="56" text-anchor="middle" font-size="32">🏃</text>
+    </svg>
+  </div>
+  <div class="splash-title">RUNNER <span>PRO</span></div>
+  <div class="splash-sub">სირბილის აპლიკაცია</div>
+  <div class="splash-loader"><div class="splash-bar"></div></div>
+</div>
+
+<!-- RUN PAGE -->
+<div id="pg-run" class="page" style="display:none">
+  <div id="map"></div>
+  <div class="weather-strip" id="weather-strip"><div class="ws-inner" id="ws-inner"><div class="ws-load"><div class="spin-sm"></div>ამინდი...</div></div></div>
+  <div class="map-overlay" id="route-overlay">
+    <div class="overlay-header">
+      <div class="overlay-icon">🗺</div>
+      <div style="flex:1"><div class="overlay-title">მარშრუტი</div><div class="overlay-sub" id="route-status">დისტანცია აირჩიე</div></div>
+      <button class="btn-collapse" onclick="toggleOverlay()" id="collapse-btn">▼</button>
+    </div>
+    <div class="overlay-body" id="overlay-body">
+      <div class="dist-grid" id="dist-chips">
+        <div class="dc" onclick="selDist(this,3)">3 კმ</div>
+        <div class="dc active" onclick="selDist(this,5)">5 კმ</div>
+        <div class="dc" onclick="selDist(this,8)">8 კმ</div>
+        <div class="dc" onclick="selDist(this,10)">10 კმ</div>
+        <div class="dc custom" onclick="openCustom()">✏️ სხვა</div>
+      </div>
+      <div id="custom-wrap" style="display:none;margin-bottom:10px">
+        <input class="pro-input" type="number" id="custom-inp" placeholder="კმ (1–50)" min="1" max="50" step="0.5">
+      </div>
+      <button class="btn-find-route" id="btn-route" onclick="findRoutes()">
+        <span class="btn-icon">📍</span> 3 მარშრუტის პოვნა
+      </button>
+      <div id="route-variants" style="display:none">
+        <div class="rv-title">აირჩიე მარშრუტი:</div>
+        <div class="rv-list" id="rv-list"></div>
+      </div>
+    </div>
+  </div>
+  <div class="run-bottom">
+    <div class="run-stats-top">
+      <div class="rs"><span class="rs-num" id="r-dist">0.00</span><span class="rs-label">კმ</span></div>
+      <div class="rs-divider"></div>
+      <div class="rs"><span class="rs-num" id="r-time">00:00</span><span class="rs-label">დრო</span></div>
+      <div class="rs-divider"></div>
+      <div class="rs"><span class="rs-num" id="r-pace">--:--</span><span class="rs-label">ტემპი/კმ</span></div>
+      <div class="rs-divider"></div>
+      <div class="rs"><span class="rs-num" id="r-cal">0</span><span class="rs-label">კკალ</span></div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog"></div><div class="prog-dot" id="prog-dot"></div></div>
+    <button class="btn-main-run go" id="run-btn" onclick="toggleRun()">
+      <span id="run-btn-icon">▶</span><span id="run-btn-text">სირბილის დაწყება</span>
+    </button>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="pg-hist" class="page" style="display:none">
+  <div class="pro-page-wrap">
+    <div class="pro-header"><div class="pro-title">ისტორია</div><div class="pro-subtitle" id="hist-count"></div></div>
+    <div id="hist-list"></div>
+  </div>
+</div>
+
+<!-- ANIMATION -->
+<div id="pg-anim" class="page" style="display:none">
+  <div id="anim-map"></div>
+  <div class="anim-bottom">
+    <div class="anim-prog-wrap"><div class="anim-prog-fill" id="ap-fill"></div></div>
+    <div class="anim-run-chips" id="run-sel"></div>
+    <div class="anim-controls">
+      <button class="btn-anim-play" onclick="playAnim()">▶ ანიმაცია</button>
+      <button class="btn-anim-reset" onclick="resetAnim()">↺</button>
+      <div class="speed-group">
+        <button class="sp" onclick="setSp(this,1)">1x</button>
+        <button class="sp active" onclick="setSp(this,3)">3x</button>
+        <button class="sp" onclick="setSp(this,5)">5x</button>
+        <button class="sp" onclick="setSp(this,10)">10x</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WEIGHT -->
+<div id="pg-weight" class="page" style="display:none">
+  <div class="pro-page-wrap">
+    <div class="pro-header"><div class="pro-title">წონა</div></div>
+    <div class="weight-hero">
+      <div class="weight-circle"><div class="wc-num" id="w-cur">--</div><div class="wc-unit">კგ</div></div>
+      <div class="w-diff" id="w-diff"></div>
+    </div>
+    <div class="pro-card">
+      <div class="card-label">ახალი ჩანაწერი</div>
+      <div class="w-add-row">
+        <input class="pro-input" type="number" id="w-inp" placeholder="72.5" step="0.1" min="30" max="300">
+        <span class="w-kg">კგ</span>
+        <button class="btn-pro-accent" onclick="addWeight()">+ შეინახე</button>
+      </div>
+    </div>
+    <div class="pro-card"><div class="card-label">პროგრესი</div><canvas id="w-canvas" style="width:100%;height:160px;display:block"></canvas></div>
+    <div class="pro-card"><div class="card-label">ჩანაწერები</div><div id="w-log-list"></div></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div id="pg-stats" class="page" style="display:none">
+  <div class="pro-page-wrap">
+    <div class="pro-header"><div class="pro-title">სტატისტიკა</div></div>
+    <div class="stats-hero-grid">
+      <div class="shg-item orange"><div class="shg-num" id="st-dist">0</div><div class="shg-label">სულ კმ</div></div>
+      <div class="shg-item blue"><div class="shg-num" id="st-runs">0</div><div class="shg-label">სირბილი</div></div>
+      <div class="shg-item teal"><div class="shg-num" id="st-best">0</div><div class="shg-label">საუკეთესო</div></div>
+      <div class="shg-item red"><div class="shg-num" id="st-streak">0</div><div class="shg-label">სერია 🔥</div></div>
+    </div>
+    <div class="pro-card"><div class="card-label">კვირის სირბილი (კმ)</div><div class="bar-chart" id="week-bars"></div></div>
+    <div class="pro-card">
+      <div class="card-label">კვირის მიზანი 🎯</div>
+      <div class="goal-row">
+        <div class="goal-info"><div class="goal-nums"><span id="goal-done">0</span> / <span id="goal-target">--</span> კმ</div><div class="goal-pct" id="goal-pct">0%</div></div>
+        <div class="goal-bar-wrap"><div class="goal-bar-fill" id="goal-bar"></div></div>
+        <div class="goal-set">
+          <input class="pro-input" type="number" id="goal-inp" placeholder="კვირაში კმ" min="1" max="500" step="1" style="font-size:14px;padding:8px 12px;">
+          <button class="btn-pro-accent" onclick="setGoal()" style="padding:8px 14px;font-size:12px;">დაყენება</button>
+        </div>
+      </div>
+    </div>
+    <div class="pro-card"><div class="card-label">მიღწევები 🏆</div><div class="badges-grid" id="badges-grid"></div></div>
+    <div class="pro-card pace-card"><div class="card-label">საუკეთესო ტემპი</div><div class="pace-big" id="st-pace">--:--</div><div class="pace-unit">წთ/კმ</div></div>
+  </div>
+</div>
+
+<nav class="pro-nav">
+  <button class="pnb active" onclick="goPage('run',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0M6 20l4-8 2 4 2-3 3 7M4 12l3-3 3 1 4-4"/></svg><span>სირბილი</span></button>
+  <button class="pnb" onclick="goPage('hist',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg><span>ისტორია</span></button>
+  <button class="pnb" onclick="goPage('anim',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>ანიმაცია</span></button>
+  <button class="pnb" onclick="goPage('weight',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l1 9H5L6 3z"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span>წონა</span></button>
+  <button class="pnb" onclick="goPage('stats',this)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>სტატი</span></button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/db.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/map.js"></script>
+<script src="js/run.js"></script>
+<script src="js/history.js"></script>
+<script src="js/animation.js"></script>
+<script src="js/weight.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
